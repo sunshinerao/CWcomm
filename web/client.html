@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CWcomm Client</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>CWcomm 客户端</h1>
+        <p>选择活动和语言，连接后收听与查看字幕</p>
+      </header>
+
+      <section class="panel">
+        <h2>1. 选择活动</h2>
+        <div class="status-row">
+          <button id="refresh-events" type="button" class="status-btn">刷新活动</button>
+        </div>
+        <label>
+          活动
+          <select id="event-select"></select>
+        </label>
+      </section>
+
+      <section class="panel">
+        <h2>2. 选择语言</h2>
+        <label>
+          收听语言
+          <select id="listen-language">
+            <option value="zh-CN">中文</option>
+            <option value="en-US">English</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="panel">
+        <h2>3. 开始连接</h2>
+        <div class="status-row">
+          <button id="connect-btn" type="button" class="status-btn">开始连接</button>
+          <button id="disconnect-btn" type="button" class="status-btn">断开</button>
+        </div>
+        <div id="conn-status">连接状态：未连接</div>
+      </section>
+
+      <section class="panel">
+        <h2>4. 字幕与翻译语音</h2>
+        <label class="inline-check">
+          <input id="tts-enabled" type="checkbox" checked />
+          播放翻译语音（服务端 TTS）
+        </label>
+        <label class="inline-check">
+          <input id="floor-audio-enabled" type="checkbox" />
+          播放现场原声（WebRTC）
+        </label>
+        <audio id="floor-audio" controls playsinline></audio>
+        <div id="subtitle-output" class="subtitle-output"></div>
+      </section>
+    </main>
+
+    <script src="./config.js"></script>
+    <script src="./client.js"></script>
+  </body>
+</html>

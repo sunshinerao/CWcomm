@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EventStatus {
+  DRAFT
+  READY
+  LIVE
+  ENDED
+  ARCHIVED
+}
+
+model Event {
+  id              String           @id @default(cuid())
+  name            String
+  sourceLanguage  String           @map("source_language")
+  targetLanguages Json             @map("target_languages")
+  status          EventStatus      @default(DRAFT)
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  subtitles       SubtitleSegment[]
+
+  @@map("events")
+}
+
+model SubtitleSegment {
+  id           BigInt   @id @default(autoincrement())
+  eventId      String   @map("event_id")
+  seq          Int
+  ts           DateTime @default(now())
+  sourceText   String   @map("source_text")
+  translations Json
+  isFinal      Boolean  @default(false) @map("is_final")
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, seq])
+  @@index([eventId, ts])
+  @@map("subtitle_segments")
+}

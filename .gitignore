@@ -1,0 +1,9 @@
+.DS_Store
+.pycache/
+__pycache__/
+node_modules/
+server/node_modules/
+server/dist/
+server/certs/*.pem
+.env
+server/.env
