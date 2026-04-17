@@ -1,23 +1,20 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CWcomm</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <title>CWcomm - Live Interpretation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   </head>
   <body>
-    <main class="container">
-      <header>
-        <h1>CWcomm</h1>
-        <p>请选择入口</p>
-      </header>
-      <section class="panel">
-        <div class="status-row">
-          <a href="./admin.html"><button type="button" class="status-btn">管理端</button></a>
-          <a href="./client.html"><button type="button" class="status-btn">客户端</button></a>
-        </div>
-      </section>
-    </main>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Global config fallback
+      window.CWCOMM_CONFIG = {
+        wsBaseUrl: "ws://127.0.0.1:8080",
+        apiBaseUrl: "http://127.0.0.1:8080"
+      };
+    </script>
   </body>
 </html>

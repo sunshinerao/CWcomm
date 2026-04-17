@@ -32,11 +32,11 @@
 - `ASR Stream Worker`：流式识别。
 - `Translation Worker`：多语种并行翻译。
 - `TTS Worker`：目标语种语音生成（可关闭并字幕兜底）。
-- `Media Distribution`：WebRTC/实时音频分发与字幕事件发布。
+- `Media Distribution`：集成 WebRTC SFU（如 MediaSoup）进行纯音频推拉流广播，结合 Redis Pub/Sub 进行字幕与 TTS 结果的全局广播。
 
 ### 2.4 数据与基础设施层
 - `PostgreSQL`：活动、用户、角色、同步任务、审计日志。
-- `Redis`：会话缓存、短期事件游标、幂等键、限流计数。
+- `Redis`：Pub/Sub 事件广播总线（跨服消息下发核心）、会话缓存、短期事件游标、限流计数。
 - `Object Storage`：二维码、活动静态附件。
 - `Message Queue`：同步任务、重试队列、死信队列。
 
@@ -44,13 +44,14 @@
 
 ## 3. 端到端数据流
 
-### 3.1 实时转译主链路
-1. 采集端推送音频流到 `Realtime Orchestrator`。
+### 3.1 实时转译主（广播）链路
+1. 采集端单路推送音频流到 `SFU Media Server`（供听众直接拉取原音）与 `Realtime Orchestrator`（供 AI 识别）。
 2. 音频分发给 `ASR Stream Worker`，生成 `TranscriptSegment`。
 3. 文本并发发送到 `Translation Worker` 生成多语种片段。
 4. 语音模式下发送至 `TTS Worker` 生成音频片段。
-5. `Media Distribution` 向听众端推送字幕与音频。
-6. 客户端 ACK/心跳反馈回 `Realtime Orchestrator`。
+5. **[广播发布]** AI 引擎将生成的字幕和 TTS 音频包发送至 `Redis Pub/Sub` 对应频道的 Topic 中。
+6. **[广播收听]** 所有 `Media Distribution` 节点订阅 Topic，各自向连接在本地节点上的千万听众下发 WebSocket 数据。
+7. 客户端 ACK/心跳反馈回管理节点，仅作在线人数统计，不阻塞主数据流。
 
 ### 3.2 活动同步链路
 1. 管理端触发重同步或定时任务触发。
@@ -98,8 +99,11 @@ flowchart LR
   R --> ASR[ASR Worker]
   ASR --> TR[Translation Worker]
   TR --> TTS[TTS Worker]
-  TR --> MD[Media Distribution]
-  TTS --> MD
+  TR --> PUB[(Redis Pub/Sub)]
+  TTS --> PUB
+  PUB --> MD[Media Distribution Nodes]
+  I -.单路上行.-> SFU[SFU Media Server]
+  SFU -.多路下行.-> A
   MD --> A
   AU --> DB[(PostgreSQL)]
   AC --> DB
@@ -136,9 +140,10 @@ flowchart LR
 
 ---
 
-## 8. 架构决策待确认
+## 8. 架构决策待确认（持续更新）
 
-1. 媒体分发主方案：WebRTC 与纯 WS 音频分片的最终取舍。
-2. token 形态：JWT 与 Opaque Token 的实现选择。
-3. 重放窗口：字幕回放时长与存储成本上限。
-4. 多区域部署时钟同步方案与跨区延迟预算。
+> **已决议：** 确认拥抱“广播-收听”架构。媒体分发主方案确定为 **SFU (如 MediaSoup) + Redis Pub/Sub WebSocket 广播**。摒弃纯 P2P Mesh，解决多客户端资源消耗线性增长的痛点。
+
+1. token 形态：JWT 与 Opaque Token 的实现选择。
+2. 重放窗口：字幕回放时长与存储成本上限。
+3. 多区域部署时钟同步方案与跨区延迟预算。

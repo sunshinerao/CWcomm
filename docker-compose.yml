@@ -19,5 +19,15 @@ services:
       timeout: 3s
       retries: 10
 
+  redis:
+    image: redis:7-alpine
+    container_name: cwcomm-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - cwcomm_redis_data:/data
+
 volumes:
   cwcomm_pg_data:
+  cwcomm_redis_data:
